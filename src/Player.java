@@ -1,9 +1,11 @@
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.HashMap;
 public class Player {
     private final List<Card> hand;
     private final List<String> books;
+    private Card previousCard;
     public Player() {
         this.hand = new ArrayList<>();
         this.books = new ArrayList<>();
@@ -49,18 +51,65 @@ public class Player {
         }
         return false;
     }
-    public Card getCardByNeed() {
-        int index = 0;
-        int frequency = 1;
-        for (int i = 0; i < hand.size() - 1; i++) {
-            int count = 1;
-            for (int j = i + 1; j < hand.size(); j++) {
-                if (hand.get(i).getRank().equals(hand.get(j).getRank())) {
-                    count++;
+    public Card getCardByNeed(ArrayList<Card> oppTook, ArrayList<Card> oppDoesNotHave) {
+        List<Card> potentialPick = hand;
+        if(potentialPick.size() <= 4){
+            previousCard = potentialPick.get(0);
+            return potentialPick.get(0);
+        }
+        else{
+            HashMap<Card, Integer> frequencies = new HashMap<>();
+            for (int i = 0; i < hand.size() - 1; i++) {
+                int count = 1;
+                if(oppTook.size() > 4 && oppDoesNotHave.size() > 4){
+                    for(int k = oppTook.size()-1; k > oppTook.size()-4; k--){
+                        if(hand.get(i).getRank().equals(oppTook.get(k).getRank())){
+                            potentialPick.remove(hand.get(i));
+                        }
+                    }
+                    for(int l = oppDoesNotHave.size() - 1; l > oppDoesNotHave.size() - 4; l--){
+                        if(hand.get(i).getRank().equals(oppTook.get(l).getRank())){
+                            potentialPick.remove(hand.get(i));
+                        }
+                    }
+                }
+                for (int j = i + 1; j < potentialPick.size(); j++) {
+                    if (potentialPick.get(i).equals(potentialPick.get(j))) {
+                        count++;
+                    }
+                    if (!frequencies.containsKey(potentialPick.get(i))){
+                        frequencies.put(potentialPick.get(i), count);
+                    }
                 }
             }
+            int max = 0;
+            Card mostOften = null;
+            for(Card i : frequencies.keySet()){
+                try {
+                    if(!i.getRank().equals(previousCard.getRank())){
+                        int a = frequencies.get(i);
+                        if(a > max){
+                            mostOften = i;
+                        }
+                    }
+                }catch(NullPointerException e){
+                    int a = frequencies.get(i);
+                    if(a > max){
+                        mostOften = i;
+                    }
+                }
+                if(previousCard != null) {
+                    if(!i.getRank().equals(previousCard.getRank())){
+                        int a = frequencies.get(i);
+                        if(a > max){
+                            mostOften = i;
+                        }
+                    }
+                }
+            }
+            previousCard = mostOften;
+            return mostOften;
         }
-        return hand.get(index);
     }
     private int findCard(Card card) {
         for (int i = 0; i < hand.size(); i++) {
